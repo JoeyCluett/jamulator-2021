@@ -21,7 +21,7 @@ global mouse_Y
 
 section .bss
 
-ALIGN 64
+align 16
     key_w:     resb 1
     key_a:     resb 1
     key_s:     resb 1
@@ -52,6 +52,10 @@ clear_inputs:
     xor rax, rax
     mov [key_w], rax
     mov [key_down], eax
+    mov [mouse_X], rax
+    mov [sdl_event + 0], rax
+    mov [sdl_event + 8], rax
+    mov [sdl_event + 16], rax
     ret
 
 ;
@@ -274,7 +278,7 @@ evaluate_inputs:
     call evaluate_mouse_button ; button is down
     jmp start_poll_loop
     
-    test_mbup:
+  test_mbup:
     cmp [sdl_event + 0], byte 6 ; SDL_MOUSEBUTTONUP
     jne start_poll_loop
     mov rdi, qword [rsp]       ; move callback into rdi

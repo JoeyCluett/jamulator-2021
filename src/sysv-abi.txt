@@ -1,0 +1,20 @@
+
+as per the System-V ABI, registers are allocated in the order:
+   rdi, rsi, rdx, rcx, r8, r9
+
+
+   rax       unpreserved, 1st return
+   rbx       callee-saved
+   rcx       4th argument
+   rdx       3rd argument, 2nd return
+   rsp       stack pointer
+   rbp       base/frame pointer
+   rsi       2nd argument
+   rdi       1st argument
+   r8        5th argument
+   r9        6th argument
+   r10       temp
+   r11       temp
+   r12-r14   callee-saved
+   r15       callee-saved (GOT)
+

@@ -21,8 +21,11 @@ SRC=./src
 OBJ=./obj
 
 FILES= \
+ ${OBJ}/main.o \
  ${OBJ}/input.o \
- ${OBJ}/main.o
+ ${OBJ}/draw.o \
+ ${OBJ}/lerp.o \
+ ${OBJ}/colors.o
 
 all: main
 

@@ -16,6 +16,12 @@ extern SDL_Quit
 extern SDL_ShowCursor
 extern SDL_GetTicks
 
+extern draw_rect
+
+; math stuff
+extern lerp
+extern euclidean_distance
+
 ; input subsystem stuff
 extern evaluate_inputs
 extern clear_inputs
@@ -35,7 +41,11 @@ extern mouse_X
 extern mouse_Y
 
 
-; global colors
+; global color symbols
+extern setup_colors
+extern color_lut_begin
+extern color_lut_end
+
 extern white
 extern black
 extern maroon
