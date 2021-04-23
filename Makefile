@@ -21,7 +21,8 @@ SRC=./src
 OBJ=./obj
 
 FILES= \
- ${OBJ}/input.o
+ ${OBJ}/input.o \
+ ${OBJ}/main.o
 
 all: main
 
