@@ -24,6 +24,7 @@ section .bss
 section .data
 
 section .text
+
 align 16
 _start:
 
@@ -34,6 +35,7 @@ _start:
     mov rdi, cSDL_INIT_EVERYTHING
     call SDL_Init
 
+    ; SDL_SetVideoMode( rdi:width, rsi:height, rdx:bpp, rcx:flags )
     mov rdi, cSCREEN_WIDTH
     mov rsi, cSCREEN_HEIGHT
     mov rdx, cBITS_PER_PIXEL
@@ -64,18 +66,36 @@ _start:
     mov r9d, dword [r9 + 0] ; actual color
     call draw_rect
 
+
+    ; draw_line( rdi:SDL_Surface*, rsi:x0, rdx:y0, rcx:x1, r8:y1, r9:color )
+    mov rdi, [screen_ptr]
+    xor rsi, rsi
+    xor rdx, rdx
+    mov rcx, 799
+    mov r8, 599
+    mov r9d, dword [yellow + 0]
+    call draw_line
+
+    mov rdi, [screen_ptr]
+    mov rsi, 799
+    xor rdx, rdx
+    xor rcx, rcx
+    mov r8, 599
+    mov r9d, dword [yellow + 0]
+    call draw_line
+
     ; swap buffers
     mov rdi, [screen_ptr]
     call SDL_Flip
 
-    ; delay for one second
-    mov rdi, 2500
+    ; delay for some time
+    mov rdi, 8000
     call SDL_Delay
 
-    add qword [rsp + 0], 8 ; advance to next color
-    mov rax, [rsp + 0]     ; 
-    cmp rax, color_lut_end ; compare iterator to end
-    jne main_loop_start    ; repeat until end
+    ;add qword [rsp + 0], 8 ; advance to next color
+    ;mov rax, [rsp + 0]     ; get new color source ptr
+    ;cmp rax, color_lut_end ; compare iterator to end
+    ;jne main_loop_start    ; repeat until end
 
     ; let SDL clean itself up
     call SDL_Quit

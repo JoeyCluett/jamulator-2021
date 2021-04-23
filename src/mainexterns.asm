@@ -17,6 +17,8 @@ extern SDL_ShowCursor
 extern SDL_GetTicks
 
 extern draw_rect
+extern draw_rect_1x1
+extern draw_line
 
 ; math stuff
 extern lerp

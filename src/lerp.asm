@@ -38,10 +38,11 @@ lerp:
 ;
 align 16
 euclidean_distance:
-    subss xmm0, xmm1  ; delta x
-    subss xmm2, xmm3  ; delta y
+    subss xmm0, xmm2  ; delta x
+    subss xmm1, xmm3  ; delta y
     mulss xmm0, xmm0  ; (delta x) ^ 2
-    mulss xmm2, xmm2  ; (delta y) ^ 2
-    addss xmm0, xmm2  ; x^2 + y^2
+    mulss xmm1, xmm1  ; (delta y) ^ 2
+    addss xmm0, xmm1  ; x^2 + y^2
     sqrtss xmm0, xmm0 ; xmm0 = sqrt(x^2 + y^2)
     ret
+

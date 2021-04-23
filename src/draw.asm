@@ -5,8 +5,11 @@
 
 
 global draw_rect
+global draw_rect_1x1
+global draw_line
 
 extern lerp
+extern euclidean_distance
 extern SDL_FillRect
 
 section .bss
@@ -29,14 +32,7 @@ draw_rect:
 
     sub rsp, 16 ; space for locals (while maintaining 16-byte alignment requirement)
 
-    ; we are going to 'manufacture' an SDL_Rect on the stack
-    ;mov [rsp + 0], word si  ; x
-    ;mov [rsp + 2], word dx  ; y
-    ;mov [rsp + 4], word cx  ; w
-    ;mov [rsp + 6], word r8w ; h (thats right, every register has a 16-bit alias)
-
-
-    ; alternate method uses single memory access
+    ; build up and store an instance of SDL_Rect
     and rsi, 0xFFFF
     and rdx, 0xFFFF
     and rcx, 0xFFFF
@@ -47,12 +43,43 @@ draw_rect:
     or rcx, r8
     or rsi, rdx
     or rcx, rsi ; rcx now contains a full SDL_Rect struct (8 bytes)
-    mov [rsp], qword rcx ; single memory access now
+    mov [rsp], qword rcx ; single memory access
 
     ; get ready to call SDL_FillRect(rdi:SDL_Surface*, rsi:SDL_Rect*, rdx:color)
     ; rdi already has SDL_Surface*
     mov rsi, rsp ; SDL_Rect is on the stack
     mov rdx, r9  ; color
+    call SDL_FillRect
+
+    mov rsp, rbp ; destroy stack frame
+    pop rbp      ; ...
+    ret
+
+;
+; rdi = SDL_Surface*
+; rsi = x
+; rdx = y
+; rcx = color
+;
+align 16
+draw_rect_1x1:
+    push rbp     ; create stack frame
+    mov rbp, rsp ; ...
+
+    sub rsp, 16
+
+    and rsi, 0xFFFF ; x
+    and rdx, 0xFFFF ; y
+    shl rdx, 16     ; shift y into place
+    or rsi, rdx     ; combine x and y into rsi
+    mov rax, 0x0001000100000000 ; h and w are 1 
+    or rsi, rax     ; combine h and w into rsi
+    mov [rsp], rsi  ; store full struct on stack
+
+    ; SDL_FillRect(rdi:SDL_Surface*, rsi:SDL_Rect*, rdx:color)
+    ; rdi already = SDL_Surface*
+    mov rsi, rsp
+    mov rdx, rcx
     call SDL_FillRect
 
     mov rsp, rbp ; destroy stack frame
@@ -72,10 +99,63 @@ draw_line:
     push rbp
     mov rbp, rsp
 
+    sub rsp, 48
 
-    
+    ; store 32-bit values locally
+    mov dword [rsp + 0], esi  ; x0
+    mov dword [rsp + 4], edx  ; y0
+    mov dword [rsp + 8], ecx  ; x1
+    mov dword [rsp + 12], r8d ; y1
 
+    ; store SDL_Surface* locally
+    mov qword [rsp + 24], rdi ; SDL_Surface*
+    mov dword [rsp + 32], r9d ; color
+
+    ; euclidean_distance( xmm0:x0, xmm1:y0, xmm2:x1 xmm3:y1 ) -> xmm0
+    cvtsi2ss xmm0, esi ; convert int to float
+    cvtsi2ss xmm1, edx ; ...
+    cvtsi2ss xmm2, ecx ; ...
+    cvtsi2ss xmm3, r8d ; ...
+    call euclidean_distance
+
+    cvtss2si eax, xmm0 ; convert result back into integer
+    mov dword [rsp + 16], eax ; one of these copies will change
+    mov dword [rsp + 20], eax ; the other wont
+
+  draw_line_loop:
+    ; calculate x and y offsets for current pixel
+
+    ; lerp( xmm0:x, xmm1:x_begin, xmm2:x_end, xmm3:y_begin, xmm4:y_end ) -> xmm0
+    cvtsi2ss xmm0, dword [rsp + 16] ; x
+    pxor xmm1, xmm1                 ; x_begin - always zero
+    cvtsi2ss xmm2, dword [rsp + 20] ; x_end
+    cvtsi2ss xmm3, dword [rsp + 0]  ; y_begin
+    cvtsi2ss xmm4, dword [rsp + 8]  ; y_end
+    call lerp ; <-- only uses SSE registers!
+
+    ; save x offset locally
+    cvtss2si esi, xmm0 ; x pixel offset
+
+    ; lerp( xmm0:x, xmm1:x_begin, xmm2:x_end, xmm3:y_begin, xmm4:y_end ) -> xmm0
+    cvtsi2ss xmm0, dword [rsp + 16] ; x
+    pxor xmm1, xmm1                 ; x_begin - always zero
+    cvtsi2ss xmm2, dword [rsp + 20] ; x_end
+    cvtsi2ss xmm3, dword [rsp + 4]  ; y_begin
+    cvtsi2ss xmm4, dword [rsp + 12] ; y_end
+    call lerp ; <-- only uses SSE registers!
+
+    ; draw_rect_1x1( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:color )
+    mov rdi, qword [rsp + 24]      ; SDL_Surface*
+    ; esi already contains x
+    cvtss2si edx, xmm0             ; y
+    mov ecx, dword [rsp + 32]      ; color
+    call draw_rect_1x1
+
+    ; iterate backwards until zero
+    dec dword [rsp + 16] ; decrement every iteration
+    jnz draw_line_loop   ; repeat until zero (...pretty sure theres an instruction specifically for this. curse you CISC!)
 
     mov rsp, rbp
     pop rbp
     ret
+
