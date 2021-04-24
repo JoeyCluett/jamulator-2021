@@ -33,10 +33,10 @@ draw_rect:
     sub rsp, 16 ; space for locals (while maintaining 16-byte alignment requirement)
 
     ; build up and store an instance of SDL_Rect
-    and rsi, 0xFFFF
-    and rdx, 0xFFFF
-    and rcx, 0xFFFF
-    and r8,  0xFFFF    
+    and rsi, 0xFFFF ; truncate x to 16 bits
+    and rdx, 0xFFFF ; truncate y to 16 bits
+    and rcx, 0xFFFF ; truncate w to 16 bits
+    and r8,  0xFFFF ; truncate h to 16 bits
     shl rdx, 16 ; shift into y position
     shl rcx, 32 ; shift into w position
     shl r8,  48 ; shift into h position

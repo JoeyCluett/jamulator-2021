@@ -51,10 +51,14 @@ _start:
 
     mov rdi, rax ; rax currently has SDL_Surface->format
     call setup_colors
+    call clear_inputs
 
     mov qword [rsp + 0], color_lut_begin
 
   main_loop_start:
+
+    xor rdi, rdi
+    call evaluate_inputs
 
     ; draw_rect( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:w, r8:h, r9:color )
     mov rdi, [screen_ptr]
@@ -65,7 +69,6 @@ _start:
     mov r9, [rsp + 0]       ; address of color
     mov r9d, dword [r9 + 0] ; actual color
     call draw_rect
-
 
     ; draw_line( rdi:SDL_Surface*, rsi:x0, rdx:y0, rcx:x1, r8:y1, r9:color )
     mov rdi, [screen_ptr]
@@ -84,12 +87,16 @@ _start:
     mov r9d, dword [yellow + 0]
     call draw_line
 
+    mov rdi, [screen_ptr]
+    mov esi, dword [navy + 0]
+    call update_ui
+
     ; swap buffers
     mov rdi, [screen_ptr]
     call SDL_Flip
 
     ; delay for some time
-    mov rdi, 8000
+    mov rdi, 100
     call SDL_Delay
 
     ;add qword [rsp + 0], 8 ; advance to next color
@@ -97,6 +104,12 @@ _start:
     ;cmp rax, color_lut_end ; compare iterator to end
     ;jne main_loop_start    ; repeat until end
 
+    mov al, byte [ quit_p ]
+    or al, byte [ key_esc ]
+    jnz program_exit
+    jmp main_loop_start
+
+  program_exit:
     ; let SDL clean itself up
     call SDL_Quit
 
@@ -105,3 +118,5 @@ _start:
     mov rbx, 0 ; exit code
     mov rax, 1 ; syscall (exit)
     int 0x80   ; sw interrupt
+
+

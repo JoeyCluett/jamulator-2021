@@ -25,7 +25,8 @@ FILES= \
  ${OBJ}/input.o \
  ${OBJ}/draw.o \
  ${OBJ}/lerp.o \
- ${OBJ}/colors.o
+ ${OBJ}/colors.o \
+ ${OBJ}/ui.o
 
 all: main
 

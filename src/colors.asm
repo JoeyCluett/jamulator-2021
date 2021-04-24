@@ -3,7 +3,7 @@
 ;   rdi, rsi, rdx, rcx, r8, r9
 ;
 
-extern SDL_MapRGB ; 
+extern SDL_MapRGB
 global setup_colors
 global color_lut_begin
 global color_lut_end
@@ -118,7 +118,7 @@ setup_colors:
     or rdi, rsi ; or red w/ green
     or rdi, rdx ; or red|green w/ blue
     or rdi, 0x000000FF ; alpha channel is always 255
-    mov [r10 + 4], edi ; lower 32 bits of rdi
+    mov [r10 + 4], edi ; save lower 32 bits of rdi
 
     add qword [rsp + 0], 3   ; advance to next 3 source bytes
     add qword [rsp + 8], 8   ; advance to next dest

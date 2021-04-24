@@ -19,6 +19,7 @@ extern SDL_GetTicks
 extern draw_rect
 extern draw_rect_1x1
 extern draw_line
+extern update_ui
 
 ; math stuff
 extern lerp
@@ -27,6 +28,7 @@ extern euclidean_distance
 ; input subsystem stuff
 extern evaluate_inputs
 extern clear_inputs
+
 extern key_w
 extern key_a
 extern key_s
