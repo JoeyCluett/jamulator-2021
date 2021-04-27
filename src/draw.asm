@@ -7,6 +7,7 @@
 global draw_rect
 global draw_rect_1x1
 global draw_line
+global draw_circle
 
 extern lerp
 extern euclidean_distance
@@ -61,6 +62,7 @@ draw_rect:
 ; rdx = y
 ; rcx = color
 ;
+; TODO: optimize to avoid explicit stack frame prologue
 align 16
 draw_rect_1x1:
     push rbp     ; create stack frame
@@ -146,7 +148,7 @@ draw_line:
 
     ; draw_rect_1x1( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:color )
     mov rdi, qword [rsp + 24]      ; SDL_Surface*
-    ; esi already contains x
+    ; esi already contains x       ; x
     cvtss2si edx, xmm0             ; y
     mov ecx, dword [rsp + 32]      ; color
     call draw_rect_1x1
@@ -159,3 +161,92 @@ draw_line:
     pop rbp
     ret
 
+
+;
+; rdi = SDL_Surface*
+; rsi = x
+; rdx = y
+; rcx = radius
+; r8  = color
+;
+align 16
+draw_circle:
+    push rbp     ; create stack frame
+    mov rbp, rsp ; ...
+
+    ; intelligent use of temp registers
+    push r12 ; y iterator
+    push r13 ; x iterator
+    push r14 ; persistent (callee-saved) copy of min x
+    push rbx ; SDL_Surface*
+
+    sub rsp, 48  ; need a lot of space for locals here
+
+    mov rbx, rdi
+    mov qword [rsp + 16], r8  ; save color locally
+    cvtsi2ss xmm0, esi ; convert x-center to float
+    cvtsi2ss xmm1, edx ; convert y-center to float
+    movss dword [rsp + 24], xmm0 ; save fp x-center
+    movss dword [rsp + 28], xmm1 ; save fp y-center
+    mov dword [rsp + 32], ecx    ; save radius to local storage
+
+    mov rax, rsi ; mov x into rax
+    mov r9, rdx  ; mov y into r9
+    sub rax, rcx ; calculate min x
+    sub r9, rcx  ; calculate min y
+    mov r14, rax ; gonna need a copy of min x for each iteration of y
+    mov r13, rax ; save min x locally (use callee-saved temp register)
+    mov r12, r9  ; save min y locally ...
+    shl rcx, 1   ; multiply radius by 2
+    add rax, rcx ; calculate max x
+    add r9, rcx  ; calculate max y
+    mov qword [rsp + 0], rax ; save max x locally
+    mov qword [rsp + 8], r9  ; save max y locally
+
+  draw_circle_outer_loop:
+
+    ; setup inner loop
+    mov r13, r14 ; move min x to iterator register
+
+  draw_circle_inner_loop:
+
+
+    ; euclidean_distance( xmm0:x0, xmm1:y0, xmm2:x1, xmm3:y1 )
+    ; x:r13, y:r12
+    movss xmm0, dword [rsp + 24] ; mov fp x-center
+    movss xmm1, dword [rsp + 28] ; mov fp y-center
+    cvtsi2ss xmm2, r13 ; convert current x to fp
+    cvtsi2ss xmm3, r12 ; convert current y to fp
+    call euclidean_distance ; <-- only uses SSE registers
+
+    cvtss2si eax, xmm0         ; convert distance to integer
+    cmp eax, dword [rsp + 32]  ; compare distance to radius
+    jg inner_loop_afterthought ; skip draw routine if outside of circle
+
+    ; TODO: rewrite to call SDL_FillRect directly
+    ; draw_rect_1x1( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:color )
+    mov rdi, rbx ; SDL_Surface*
+    mov rsi, r13 ; x
+    mov rdx, r12 ; y
+    mov ecx, dword [rsp + 16] ; color
+    call draw_rect_1x1
+
+  inner_loop_afterthought:
+    inc r13                    ; increment x iterator
+    cmp r13, qword [rsp + 0]   ; compare to max x
+    jle draw_circle_inner_loop ; loop while less than
+
+    ; outer loop afterthought
+    inc r12                    ; increment y iterator
+    cmp r12, qword [rsp + 8]   ; compare to max y
+    jle draw_circle_outer_loop ; loop while less than
+
+    add rsp, 48
+    pop rbx  ; restore temporary registers (as per Sys-V abi)
+    pop r14  ; restore temporary registers (as per Sys-V abi)
+    pop r13  ; ...
+    pop r12  ; ...
+
+    mov rsp, rbp ; destroy stack frame
+    pop rbp      ; ...
+    ret

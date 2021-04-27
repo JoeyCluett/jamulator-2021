@@ -91,6 +91,14 @@ _start:
     mov esi, dword [navy + 0]
     call update_ui
 
+    ; draw_circle( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:radius, r8:color )
+    mov rdi, [screen_ptr]
+    mov esi, 400 ; x
+    mov edx, 400 ; y
+    mov ecx, 100 ; radius
+    mov r8d, dword [fuschia + 0] ; color
+    call draw_circle
+
     ; swap buffers
     mov rdi, [screen_ptr]
     call SDL_Flip

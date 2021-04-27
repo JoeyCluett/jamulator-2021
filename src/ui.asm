@@ -11,11 +11,11 @@ section .data
     btn_data_start:
     
     ;              x    y    w   h     mirrors exact layout of SDL_Rect
-    and_btn:  dw 700,   0, 100,  50
-    nand_btn: dw 700,  51, 100,  50
-    or_btn:   dw 700, 102, 100,  50
-    nor_btn:  dw 700, 153, 100,  50
-    not_btn:  dw 700, 204, 100,  50
+    and_btn:  dw 1,   0, 100,  50
+    nand_btn: dw 1,  51, 100,  50
+    or_btn:   dw 1, 102, 100,  50
+    nor_btn:  dw 1, 153, 100,  50
+    not_btn:  dw 1, 204, 100,  50
     btn_data_end:
 
 section .bss

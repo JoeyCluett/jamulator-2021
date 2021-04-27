@@ -19,6 +19,7 @@ extern SDL_GetTicks
 extern draw_rect
 extern draw_rect_1x1
 extern draw_line
+extern draw_circle
 extern update_ui
 
 ; math stuff
@@ -67,3 +68,7 @@ extern aqua
 extern silver
 extern gray
 extern brown
+extern gold
+extern darkbrown
+extern beige
+

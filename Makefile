@@ -26,6 +26,7 @@ FILES= \
  ${OBJ}/draw.o \
  ${OBJ}/lerp.o \
  ${OBJ}/colors.o \
+ ${OBJ}/font_data.o \
  ${OBJ}/ui.o
 
 all: main
