@@ -23,6 +23,8 @@ section .bss
 
 section .data
 
+    game_title: db "not-logic.ly", 0x00
+
 section .text
 
 align 16
@@ -62,12 +64,11 @@ _start:
 
     ; draw_rect( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:w, r8:h, r9:color )
     mov rdi, [screen_ptr]
-    mov rsi, 200 ; x
-    mov rdx, 200 ; y
-    mov rcx, 400 ; w
-    mov r8,  200 ; h
-    mov r9, [rsp + 0]       ; address of color
-    mov r9d, dword [r9 + 0] ; actual color
+    mov rsi, 0   ; x
+    mov rdx, 0   ; y
+    mov rcx, 800 ; w
+    mov r8, 600  ; h
+    mov r9, [black + 0] ; color
     call draw_rect
 
     ; draw_line( rdi:SDL_Surface*, rsi:x0, rdx:y0, rcx:x1, r8:y1, r9:color )
@@ -79,6 +80,7 @@ _start:
     mov r9d, dword [yellow + 0]
     call draw_line
 
+    ; draw_line( rdi:SDL_Surface*, rsi:x0, rdx:y0, rcx:x1, r8:y1, r9:color )
     mov rdi, [screen_ptr]
     mov rsi, 799
     xor rdx, rdx
@@ -91,13 +93,24 @@ _start:
     mov esi, dword [navy + 0]
     call update_ui
 
-    ; draw_circle( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:radius, r8:color )
+    ; draw_string( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:char*, r8:color, r9:scale )
     mov rdi, [screen_ptr]
-    mov esi, 400 ; x
-    mov edx, 400 ; y
-    mov ecx, 100 ; radius
-    mov r8d, dword [fuschia + 0] ; color
-    call draw_circle
+    mov rsi, 200 ; x
+    mov rdx, 10 ; y
+    mov rcx, game_title
+    mov r8d, [white + 0]
+    mov r9, 4 ; scale
+    call draw_string
+
+
+    ; draw_and_gate( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:color )
+    ;mov rdi, [screen_ptr]
+    ;mov esi, 500 ; x
+    ;mov edx, 100 ; y
+    ;mov esi, [mouse_X]
+    ;mov edx, [mouse_Y]
+    ;mov ecx, dword [white + 0] ; color
+    ;call draw_and_gate
 
     ; swap buffers
     mov rdi, [screen_ptr]
@@ -107,10 +120,6 @@ _start:
     mov rdi, 100
     call SDL_Delay
 
-    ;add qword [rsp + 0], 8 ; advance to next color
-    ;mov rax, [rsp + 0]     ; get new color source ptr
-    ;cmp rax, color_lut_end ; compare iterator to end
-    ;jne main_loop_start    ; repeat until end
 
     mov al, byte [ quit_p ]
     or al, byte [ key_esc ]

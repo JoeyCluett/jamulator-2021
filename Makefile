@@ -27,7 +27,8 @@ FILES= \
  ${OBJ}/lerp.o \
  ${OBJ}/colors.o \
  ${OBJ}/font_data.o \
- ${OBJ}/ui.o
+ ${OBJ}/ui.o \
+ ${OBJ}/font.o
 
 all: main
 

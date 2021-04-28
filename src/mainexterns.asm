@@ -22,6 +22,12 @@ extern draw_line
 extern draw_circle
 extern update_ui
 
+extern draw_and_gate
+
+; font stuff
+extern draw_char
+extern draw_string
+
 ; math stuff
 extern lerp
 extern euclidean_distance

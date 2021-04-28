@@ -9,6 +9,9 @@ global draw_rect_1x1
 global draw_line
 global draw_circle
 
+; subroutines for drawing logic gates
+global draw_and_gate
+
 extern lerp
 extern euclidean_distance
 extern SDL_FillRect
@@ -221,7 +224,7 @@ draw_circle:
 
     cvtss2si eax, xmm0         ; convert distance to integer
     cmp eax, dword [rsp + 32]  ; compare distance to radius
-    jg inner_loop_afterthought ; skip draw routine if outside of circle
+    jg draw_circle_inner_loop_afterthought ; skip draw routine if outside of circle
 
     ; TODO: rewrite to call SDL_FillRect directly
     ; draw_rect_1x1( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:color )
@@ -231,7 +234,7 @@ draw_circle:
     mov ecx, dword [rsp + 16] ; color
     call draw_rect_1x1
 
-  inner_loop_afterthought:
+  draw_circle_inner_loop_afterthought:
     inc r13                    ; increment x iterator
     cmp r13, qword [rsp + 0]   ; compare to max x
     jle draw_circle_inner_loop ; loop while less than
@@ -246,6 +249,57 @@ draw_circle:
     pop r14  ; restore temporary registers (as per Sys-V abi)
     pop r13  ; ...
     pop r12  ; ...
+
+    mov rsp, rbp ; destroy stack frame
+    pop rbp      ; ...
+    ret
+
+
+;
+; rdi = SDL_Surface*
+; rsi = x (center of circle)
+; rdx = y ...
+; rcx = color
+;
+align 16
+draw_and_gate:
+    push rbp     ; create stack frame
+    mov rbp, rsp ; ...
+
+    push r12    ; SDL_Surface*
+    push r13    ; color
+    push r14    ; x
+    push rbx    ; y
+    ;sub rsp, 32 ; space for locals
+
+    mov r12, rdi ; save SDL_Surface* locally
+    mov r13, rcx ; save color locally
+    mov r14, rsi ; save x locally
+    mov rbx, rdx ; save y locally
+
+    ; draw_circle( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:radius, r8:color )
+    ; rdi already contains SDL_Surface*
+    ; rsi already contains x
+    ; rdx already contains y
+    mov r8, rcx ; mov color
+    mov rcx, 15 ; radius
+    call draw_circle
+
+    ; draw_rect( rdi:SDL_Surface*, rsi:x, rdx:y, rcx:w, r8:h, r9:color )
+    mov rdi, r12 ; SDL_Surface*
+    mov rsi, r14 ; x
+    sub rsi, 15  ; shift x to the left
+    mov rdx, rbx ; y
+    mov rcx, 31  ; w
+    mov r8,  16  ; h
+    mov r9, r13  ; color
+    call draw_rect
+
+    ;add rsp, 32
+    pop rbx ; restore temp variables
+    pop r14 ; ...
+    pop r13 ; ...
+    pop r12 ; ...
 
     mov rsp, rbp ; destroy stack frame
     pop rbp      ; ...

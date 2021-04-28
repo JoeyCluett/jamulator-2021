@@ -4,6 +4,7 @@
 ;
 
 extern SDL_MapRGB
+
 global setup_colors
 global color_lut_begin
 global color_lut_end
