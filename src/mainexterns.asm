@@ -16,13 +16,15 @@ extern SDL_Quit
 extern SDL_ShowCursor
 extern SDL_GetTicks
 
+; various draw routines
 extern draw_rect
 extern draw_rect_1x1
 extern draw_line
 extern draw_circle
-extern update_ui
-
 extern draw_and_gate
+
+extern update_ui
+extern check_button_press
 
 ; font stuff
 extern draw_char

@@ -1,5 +1,6 @@
 
 global update_ui
+global check_button_press
 
 extern draw_rect
 extern draw_rect_1x1
@@ -88,16 +89,49 @@ update_ui:
     pop rbp      ; ...
     ret
 
+;
+; rdi = X
+; rsi = Y
+;
 align 16
 check_button_press:
     push rbp
     mov rbp, rsp
 
     xor rax, rax ; zero out rax
-    dec rax      ; need -1 here
+    mov rdx, btn_data_start ; button data iterator
 
+  check_button_press_loop_start:
 
+    mov cx, word [rdx + 0] ; load button X
+    cmp di, cx ; check if X less than button X
+    jl check_button_press_loop_afterthought
 
+    add cx, word [rdx + 4] ; add button W to button X
+    cmp di, cx ; check if X greater than button X+W
+    jg check_button_press_loop_afterthought
+
+    mov cx, word [rdx + 2] ; load button Y
+    cmp si, cx ; check if Y less than button Y
+    jl check_button_press_loop_afterthought
+
+    add cx, word [rdx + 6] ; add button H to button Y
+    cmp si, cx ; check if Y greater than button Y+H
+    jg check_button_press_loop_afterthought
+
+    ; if all of the above checks fail, X/Y overlaps a button
+    ; jump to end of subroutine. rax contains index of correct button
+    jmp check_button_press_end
+
+  check_button_press_loop_afterthought:
+    inc rax               ; increment button ident
+    add rdx, 24           ; advance iterator
+    cmp rdx, btn_data_end ; compare iterator to end
+    jne check_button_press_loop_start ; loop until equal
+
+    mov rax, -1 ; mov -1 (means no collision)
+
+  check_button_press_end:
     mov rsp, rbp
     pop rbp
     ret
